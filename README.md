@@ -12,8 +12,9 @@ across **states and districts** in FY 2025-26.
 3. **Flag manufacturing exports** (SITC 5–8 excl. 68; variant also excl. 667)
    and **high-tech exports** (OECD/World Bank SITC Rev.3 list) — *done (first pass)*.
 4. **Indicators** — high-tech share of manufacturing exports, nationally by year
-   (FY07–FY26) and by state/district for FY 2025-26 — *first tables produced*.
-5. **Outputs** — time-series plots, state and district choropleths — *next*.
+   (FY07–FY26) and by state for FY 2025-26 — *done*.
+5. **Outputs** — national and state charts — *done*; state choropleth, then
+   district analysis and maps — *later*.
 
 ## Repository layout
 
@@ -30,10 +31,12 @@ data/
 scripts/
   01_clean_export_data.py
   02_map_hs6_to_sitc_and_flag.py
+  03_plots_national_and_state.py
+figures/                 charts (PNG)
 requirements.txt
 ```
 
-Reproduce: `pip install -r requirements.txt`, then run `python scripts/01_clean_export_data.py` and `python scripts/02_map_hs6_to_sitc_and_flag.py`.
+Reproduce: `pip install -r requirements.txt`, then run `python scripts/01_clean_export_data.py` `python scripts/02_map_hs6_to_sitc_and_flag.py` and `python scripts/03_plots_national_and_state.py` (needs matplotlib).
 
 ## Data sources
 
@@ -158,19 +161,42 @@ exports only, not in manufacturing; see `unmapped_hs6_codes.csv`.
   a 3- or 4-digit SITC code (for example HS2017 `854239` → 776). Where another
   edition maps the *same* HS6 code to a finer SITC code *inside* that code
   (776 → 7764), the finer code is used (305 code-edition pairs; the source is
-  in `sitc3_refined_from`). After this, the remaining "partially high-tech"
-  value (`hightech_partial`, not counted as high-tech) is under US$ 1.2 bn in
-  any year.
-- **Open issue: inconsistent mappings across editions.** Some HS6 codes switch
+  in `sitc3_refined_from`).
+- **Broad SITC codes are weighted (`hightech_weight`).** Every SITC Rev.3
+  bottom-level code (3,113 basic headings, taken from all WITS H0–H6 tables)
+  is classed high-tech or not. A broad code gets weight = share of its
+  bottom-level codes that are high-tech, so that share of its value counts as
+  high-tech and the rest as other manufacturing. Examples: 7513 photocopiers
+  3 of 5 → 0.6; 764 telecom equipment 18 of 20 → 0.9 (76493/76499 are
+  excluded from the list); 776 → 0.75; 542 medicaments 9 of 14 → 0.64; 759 → 0.2.
+  Detailed codes get 0 or 1. The counting is unweighted by value, so it is a
+  rough split. Its effect is small: the high-tech value coming from broad codes
+  is at most US$ 0.54 bn in any year (FY23).
+- **Inconsistent mappings across editions (decision: keep).** Some HS6 codes switch Some HS6 codes switch
   high-tech status between editions purely because of the concordance. Examples:
   `851762` (telecom switching/routing apparatus) is not high-tech under HS2007
   (→7529) but is under HS2012+ (→76432); `293712` (insulin) is high-tech under
   HS2002–2012 (→54151) but not under HS2017+ (→5157); `902110` (orthopaedic
   appliances) loses high-tech status in HS2022 (→694). These codes carry about
-  US$ 1–2 bn of exports a year. For now the edition-specific WITS mapping is
-  kept as is.
+  US$ 1–2 bn of exports a year. **Decision:** keep the edition-specific WITS
+  mapping as is (official tables, no ad hoc harmonisation).
 
-### Results (first pass)
+### Decisions so far
+
+| Question | Decision |
+|---|---|
+| Headline manufacturing definition | World Bank: SITC 5–8 excl. 68 (`manuf_wdi`); the version excluding 667 is reported as a sensitivity |
+| Inconsistent HS→SITC mappings across editions | keep the edition-specific WITS mapping |
+| High-tech list | OECD 1997 list unchanged (pharma = antibiotics, hormones, vaccines and medicaments containing them) |
+| Broad SITC codes only partly high-tech | weight by share of bottom-level codes that are high-tech |
+| `UNSPECIFIED` state (US$ 4.3 bn, mostly petroleum) | keep for now; decide later |
+| Delhi's high share (55.6%) | noted on charts and here; left as is. DGCI&S "state of origin" likely captures goods registered or consolidated in Delhi rather than made there |
+| Yearly data in INR | not needed (US$ only) |
+| Scope for now | national years + states; districts and maps later |
+
+### Results
+
+High-tech share of India's manufactured exports:
 
 High-tech share of India's manufactured exports:
 
@@ -178,20 +204,21 @@ High-tech share of India's manufactured exports:
 |---|---|---|---|---|---|
 | 2006-07 | 126.4 | 82.1 | 5.0 | 6.1 | 7.1 |
 | 2010-11 | 249.8 | 151.2 | 12.1 | 8.0 | 9.9 |
-| 2015-16 | 262.3 | 182.6 | 15.0 | 8.2 | 9.3 |
-| 2020-21 | 291.8 | 205.8 | 22.4 | 10.9 | 11.9 |
-| 2022-23 | 451.1 | 278.3 | 37.3 | 13.4 | 14.7 |
-| 2023-24 | 437.1 | 281.3 | 44.1 | 15.7 | 16.8 |
-| 2024-25 | 437.7 | 300.0 | 58.9 | 19.6 | 20.7 |
-| 2025-26 | 441.5 | 311.4 | 62.6 | 20.1 | 21.1 |
+| 2015-16 | 262.3 | 182.6 | 14.8 | 8.1 | 9.2 |
+| 2020-21 | 291.8 | 205.8 | 22.7 | 11.0 | 12.1 |
+| 2022-23 | 451.1 | 278.3 | 37.4 | 13.4 | 14.8 |
+| 2023-24 | 437.1 | 281.3 | 44.2 | 15.7 | 16.9 |
+| 2024-25 | 437.7 | 300.0 | 59.0 | 19.7 | 20.8 |
+| 2025-26 | 441.5 | 311.4 | 62.8 | 20.2 | 21.1 |
 
 The rise since FY23 is driven by electronics/telecoms, in particular
 smartphones (HS 851713: US$ 29.4 bn in FY26), plus aircraft turbo-jets
 (HS 841112: US$ 5.1 bn in FY26).
 
 Top states by high-tech exports, FY 2025-26: Tamil Nadu US$ 19.2 bn (35.7% of
-manufactured exports), Karnataka 10.6 (41.6%), Maharashtra 7.3 (12.2%),
-Gujarat 7.1 (12.1%), Delhi 5.5 (55.5%), Uttar Pradesh 5.3 (29.6%).
+manufactured exports), Karnataka 10.6 (41.5%), Maharashtra 7.3 (12.2%),
+Gujarat 7.2 (12.3%), Delhi 5.5 (55.6%), Uttar Pradesh 5.3 (29.9%).
+Full table: `data/processed/state_summary_fy2025_26.csv`.
 
 ### Step 2 outputs (`data/processed/`)
 
@@ -204,3 +231,18 @@ Gujarat 7.1 (12.1%), Delhi 5.5 (55.5%), Uttar Pradesh 5.3 (29.6%).
 | `district_exports_hs6_fy2025_26_flagged.parquet` | district file with SITC and flags |
 | `hightech_share_by_state_fy2025_26.csv`, `hightech_share_by_district_fy2025_26.csv` | shares by state and district |
 | `unmapped_hs6_codes.csv` | HS6 codes with no SITC mapping, by FY |
+
+## Step 3: charts (`figures/`)
+
+![High-tech share of manufactured exports](figures/01_hightech_share_national.png)
+
+![High-tech exports by product group](figures/02_hightech_by_group_national.png)
+
+![Total, manufactured and high-tech exports](figures/03_exports_levels_national.png)
+
+![High-tech share by state, FY 2025-26](figures/04_state_hightech_share_fy2026.png)
+
+![High-tech exports by state, FY 2025-26](figures/05_state_hightech_value_fy2026.png)
+
+State charts include states with manufactured exports of at least US$ 0.5 bn
+and leave out `UNSPECIFIED`.

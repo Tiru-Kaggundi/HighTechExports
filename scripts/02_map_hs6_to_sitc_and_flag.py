@@ -21,14 +21,18 @@ Flags
               -> World Bank WDI definition of manufactures exports.
   manuf_unctad  same, also excluding group 667 (pearls, precious and
               semi-precious stones) -> UNCTAD/WITS "manufactured goods".
-  hightech    OECD (Hatzichronoglou 1997, Annex 2 Table 4) SITC Rev.3 list,
+  hightech_weight  share of the product's value counted as high-tech, using
+              the OECD (Hatzichronoglou 1997, Annex 2 Table 4) SITC Rev.3 list
               used by the World Bank for TX.VAL.TECH.* indicators
-              (data/reference/oecd_hightech_sitc3.csv). Longest-prefix match:
-              the most specific listed code wins (include or exclude).
-  hightech_partial  SITC code is coarser than the list (e.g. concordance gives
-              4-digit 7513 but only 75131/75132/75134 are high-tech) so some,
-              but not all, of the product may be high-tech. Not counted as
-              high-tech; reported for transparency.
+              (data/reference/oecd_hightech_sitc3.csv). Each SITC Rev.3 leaf
+              code (basic heading) is high-tech or not by longest-prefix match
+              (the most specific listed code wins, include or exclude). A
+              coarser SITC code gets weight = share of its leaf codes that are
+              high-tech (e.g. 7513 has 5 leaves, 3 high-tech -> 0.6; 764 has
+              20 leaves, 76493/76499 excluded -> 0.9). Detailed codes get 0/1.
+              The leaf universe is every SITC code in the WITS H0..H6 tables.
+  hightech          weight == 1;  hightech_partial: 0 < weight < 1.
+  Headline indicator: high-tech value (export x weight) / manuf_wdi value.
 
 Outputs (data/processed/):
   hs6_sitc3_concordance_flags.csv          every HS6 code per HS edition with SITC + flags
@@ -53,6 +57,7 @@ REF = ROOT / "data" / "reference"
 OUT = ROOT / "data" / "processed"
 
 EDITIONS = ["H2", "H3", "H4", "H5", "H6"]
+UNIVERSE_EDITIONS = ["H0", "H1"] + EDITIONS  # only used to list all SITC leaf codes
 EDITION_LABEL = {"H2": "HS2002", "H3": "HS2007", "H4": "HS2012", "H5": "HS2017", "H6": "HS2022"}
 
 
@@ -129,21 +134,32 @@ def load_hightech_list() -> pd.DataFrame:
     return ht
 
 
-def hightech_lookup(sitc: str, ht: pd.DataFrame) -> tuple[str | None, bool]:
-    """Return (high-tech group or None, partial flag)."""
-    matches = ht[[sitc.startswith(p) for p in ht["sitc3_prefix"]]]
-    group = None
-    if len(matches):
-        best = matches.loc[matches["sitc3_prefix"].str.len().idxmax()]
-        if best["rule"] == "include":
-            group = best["group"]
-    partial = False
-    if group is None:
-        # Listed codes that are strictly finer than this SITC code.
-        finer = ht[(ht["rule"] == "include") & ht["sitc3_prefix"].str.startswith(sitc)
-                   & (ht["sitc3_prefix"].str.len() > len(sitc))]
-        partial = len(finer) > 0
-    return group, partial
+def sitc_leaves() -> list[str]:
+    """All SITC Rev.3 leaf codes (basic headings): codes in any WITS table
+    that have no finer code below them."""
+    codes = set(pd.concat([load_concordance(e)["sitc3"] for e in UNIVERSE_EDITIONS]))
+    return sorted(c for c in codes if not any(o != c and o.startswith(c) for o in codes))
+
+
+def leaf_group(leaf: str, ht: pd.DataFrame) -> str | None:
+    """High-tech group of a leaf code by longest-prefix match, or None."""
+    matches = ht[[leaf.startswith(p) for p in ht["sitc3_prefix"]]]
+    if matches.empty:
+        return None
+    best = matches.loc[matches["sitc3_prefix"].str.len().idxmax()]
+    return best["group"] if best["rule"] == "include" else None
+
+
+def hightech_weight(sitc: str, leaf_groups: dict[str, str | None], ht: pd.DataFrame) -> tuple[float, str | None, int]:
+    """(weight, dominant high-tech group, number of leaves) for any SITC code."""
+    leaves = [l for l in leaf_groups if l.startswith(sitc)]
+    if not leaves:  # code not in the leaf universe (should not happen)
+        g = leaf_group(sitc, ht)
+        return (1.0 if g else 0.0), g, 1
+    groups = [leaf_groups[l] for l in leaves if leaf_groups[l]]
+    w = len(groups) / len(leaves)
+    dom = max(set(groups), key=groups.count) if groups else None
+    return w, dom, len(leaves)
 
 
 def add_flags(c: pd.DataFrame, ht: pd.DataFrame) -> pd.DataFrame:
@@ -154,17 +170,21 @@ def add_flags(c: pd.DataFrame, ht: pd.DataFrame) -> pd.DataFrame:
     in_5_8 = c["sitc_section"].isin(list("5678"))
     c["manuf_wdi"] = in_5_8 & (c["sitc_division"] != "68")
     c["manuf_unctad"] = c["manuf_wdi"] & (c["sitc_group"] != "667")
-    lk = {code: hightech_lookup(code, ht) for code in s.unique()}
-    c["hightech_group"] = s.map(lambda x: lk[x][0])
-    c["hightech"] = c["hightech_group"].notna()
-    c["hightech_partial"] = s.map(lambda x: lk[x][1])
+    leaf_groups = {l: leaf_group(l, ht) for l in sitc_leaves()}
+    lk = {code: hightech_weight(code, leaf_groups, ht) for code in s.unique()}
+    c["hightech_weight"] = s.map(lambda x: lk[x][0]).round(6)
+    c["hightech_group"] = s.map(lambda x: lk[x][1])
+    c["sitc3_n_leaves"] = s.map(lambda x: lk[x][2])
+    c["hightech"] = c["hightech_weight"] == 1
+    c["hightech_partial"] = (c["hightech_weight"] > 0) & (c["hightech_weight"] < 1)
     # All OECD high-tech products sit inside SITC 5-8 excl. 68 and 667.
-    assert not (c["hightech"] & ~c["manuf_unctad"]).any()
+    assert not ((c["hightech_weight"] > 0) & ~c["manuf_unctad"]).any()
     return c
 
 
 FLAG_COLS = ["sitc3", "sitc3_wits", "sitc3_refined_from", "sitc3_description", "sitc_section", "sitc_division", "sitc_group",
-             "manuf_wdi", "manuf_unctad", "hightech", "hightech_group", "hightech_partial"]
+             "manuf_wdi", "manuf_unctad", "sitc3_n_leaves", "hightech_weight", "hightech", "hightech_partial",
+             "hightech_group"]
 
 
 def attach(df: pd.DataFrame, conc: pd.DataFrame) -> pd.DataFrame:
@@ -192,6 +212,8 @@ def attach(df: pd.DataFrame, conc: pd.DataFrame) -> pd.DataFrame:
     res = pd.concat(out_parts, ignore_index=True)
     for col in ["manuf_wdi", "manuf_unctad", "hightech", "hightech_partial"]:
         res[col] = res[col].fillna(False).astype(bool)
+    res["hightech_weight"] = res["hightech_weight"].fillna(0.0)
+    res["hightech_usd"] = res["export_usd"] * res["hightech_weight"]
     res["sitc_mapped"] = res["sitc3"].notna()
     res["hs_edition_used"] = res["hs_edition_used"].map(EDITION_LABEL)
     return res.drop(columns="hs_edition_target")
@@ -204,8 +226,8 @@ def share_table(df: pd.DataFrame, by: list[str]) -> pd.DataFrame:
             total=v,
             manuf_wdi_v=v.where(df["manuf_wdi"], 0),
             manuf_unctad_v=v.where(df["manuf_unctad"], 0),
-            hightech_v=v.where(df["hightech"], 0),
-            partial_v=v.where(df["hightech_partial"], 0),
+            hightech_v=v * df["hightech_weight"],
+            partial_v=(v * df["hightech_weight"]).where(df["hightech_partial"], 0),
             unmapped_v=v.where(~df["sitc_mapped"], 0),
         )
         .groupby(by, as_index=False)[["total", "manuf_wdi_v", "manuf_unctad_v", "hightech_v",
@@ -215,7 +237,7 @@ def share_table(df: pd.DataFrame, by: list[str]) -> pd.DataFrame:
             "manuf_wdi_v": "manuf_wdi_usd_mn",
             "manuf_unctad_v": "manuf_unctad_usd_mn",
             "hightech_v": "hightech_usd_mn",
-            "partial_v": "hightech_partial_usd_mn",
+            "partial_v": "hightech_from_partial_codes_usd_mn",
             "unmapped_v": "unmapped_usd_mn",
         })
     )
@@ -243,7 +265,8 @@ def main() -> None:
 
     nat = share_table(yf, ["fy"])
     nat.to_csv(OUT / "india_hightech_share_national.csv", index=False)
-    grp = (yf[yf["hightech"]].pivot_table(index="fy", columns="hightech_group", values="export_usd_mn",
+    grp = (yf[yf["hightech_weight"] > 0].assign(hightech_usd_mn=lambda x: x["hightech_usd"] / 1e6)
+           .pivot_table(index="fy", columns="hightech_group", values="hightech_usd_mn",
                                           aggfunc="sum", fill_value=0).round(3))
     grp.to_csv(OUT / "india_hightech_by_group_national.csv")
 
@@ -265,7 +288,7 @@ def main() -> None:
 
     pd.set_option("display.width", 200)
     print(nat[["fy", "total_exports_usd_mn", "manuf_wdi_usd_mn", "manuf_unctad_usd_mn", "hightech_usd_mn",
-               "hightech_partial_usd_mn", "unmapped_usd_mn", "hightech_pct_of_manuf_wdi",
+               "hightech_from_partial_codes_usd_mn", "unmapped_usd_mn", "hightech_pct_of_manuf_wdi",
                "hightech_pct_of_manuf_unctad"]].round(1).to_string(index=False))
     print("\nEdition used (share of rows):\n", yf.groupby("fy")["hs_edition_used"].value_counts(normalize=True)
           .round(3).unstack().fillna(0).to_string())
