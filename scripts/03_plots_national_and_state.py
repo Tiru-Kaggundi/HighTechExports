@@ -106,6 +106,24 @@ ax.set_title("India: total, manufactured and high-tech exports (US$ bn)")
 ax.legend(frameon=False, loc="upper left", fontsize=8.5)
 finish(fig, ax, "03_exports_levels_national.png")
 
+# 6. Manufactured exports as % of total exports ----------------------------
+fig, ax = plt.subplots(figsize=(9, 4.8))
+ax.plot(x, nat["manuf_wdi_pct_of_total"], color=SERIES[0], lw=2, marker="o", ms=4,
+        label="Manufactured (World Bank: SITC 5–8 excl. 68)")
+unctad_pct = 100 * nat["manuf_unctad_usd_mn"] / nat["total_exports_usd_mn"]
+ax.plot(x, unctad_pct, color=SERIES[1], lw=2, ls="--",
+        label="Sensitivity: also excluding gems & precious stones (667)")
+for i in [0, len(nat) - 1]:
+    v = nat["manuf_wdi_pct_of_total"].iloc[i]
+    ax.annotate(f"{v:.1f}%", (i, v), textcoords="offset points", xytext=(0, 9), ha="center",
+                fontsize=9, color=INK, fontweight="bold")
+ax.set_xticks(list(x), nat["lab"], fontsize=8)
+ax.set_ylim(0, 100)
+ax.set_ylabel("% of total merchandise exports")
+ax.set_title("India: manufactured exports as a share of total merchandise exports")
+ax.legend(frameon=False, loc="lower left", fontsize=8.5)
+finish(fig, ax, "06_manuf_share_of_total_national.png")
+
 # ---------------------------------------------------------------------------
 st = pd.read_csv(PROC / "hightech_share_by_state_fy2025_26.csv")
 st["state_label"] = st["state"].str.title().str.replace("Dadra,Nh,Daman,Diu", "DNH & DD", regex=False)

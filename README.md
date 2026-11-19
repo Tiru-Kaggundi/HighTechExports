@@ -13,8 +13,8 @@ across **states and districts** in FY 2025-26.
    and **high-tech exports** (OECD/World Bank SITC Rev.3 list) — *done (first pass)*.
 4. **Indicators** — high-tech share of manufacturing exports, nationally by year
    (FY07–FY26) and by state for FY 2025-26 — *done*.
-5. **Outputs** — national and state charts — *done*; state choropleth, then
-   district analysis and maps — *later*.
+5. **Outputs** — national and state charts and state maps — *done*; district
+   analysis and maps — *later*.
 
 ## Repository layout
 
@@ -28,15 +28,18 @@ data/
   reference/
     oecd_hightech_sitc3.csv          OECD high-tech product list (SITC Rev.3)
     manual_hs6_sitc3_additions.csv   codes missing from WITS tables
+    geo/india_states_official.geojson  state/UT boundaries (official external boundary)
 scripts/
   01_clean_export_data.py
   02_map_hs6_to_sitc_and_flag.py
   03_plots_national_and_state.py
-figures/                 charts (PNG)
+  04_build_state_boundaries.py
+  05_state_maps.py
+figures/                 charts and maps (PNG)
 requirements.txt
 ```
 
-Reproduce: `pip install -r requirements.txt`, then run `python scripts/01_clean_export_data.py` `python scripts/02_map_hs6_to_sitc_and_flag.py` and `python scripts/03_plots_national_and_state.py` (needs matplotlib).
+Reproduce: `pip install -r requirements.txt`, then run `python scripts/01_clean_export_data.py` `python scripts/02_map_hs6_to_sitc_and_flag.py` and `python scripts/03_plots_national_and_state.py` and `python scripts/05_state_maps.py` (needs matplotlib, geopandas). The boundary GeoJSON is committed; `scripts/04_build_state_boundaries.py <india_districts_2011.shp>` rebuilds it.
 
 ## Data sources
 
@@ -240,9 +243,42 @@ Full table: `data/processed/state_summary_fy2025_26.csv`.
 
 ![Total, manufactured and high-tech exports](figures/03_exports_levels_national.png)
 
+![Manufactured exports as a share of total exports](figures/06_manuf_share_of_total_national.png)
+
+Manufactured exports (World Bank definition) are 59–71% of India's merchandise
+exports over the period: 64.9% in FY07 and 70.5% in FY26. The dips in FY11–14
+and FY22–23 track mineral fuels (SITC 3, mostly refined petroleum): their
+share of exports was 19–21% in FY12–14 and 22% in FY23, against 9–13% in
+FY16–FY21 and 12.7% in FY26.
+
 ![High-tech share by state, FY 2025-26](figures/04_state_hightech_share_fy2026.png)
 
 ![High-tech exports by state, FY 2025-26](figures/05_state_hightech_value_fy2026.png)
 
 State charts include states with manufactured exports of at least US$ 0.5 bn
 and leave out `UNSPECIFIED`.
+
+### State maps
+
+![Map: high-tech share of manufactured exports by state](figures/07_map_state_hightech_share_fy2026.png)
+
+![Map: high-tech exports by state](figures/08_map_state_hightech_value_fy2026.png)
+
+**Boundaries** (`data/reference/geo/india_states_official.geojson`): built by
+`scripts/04_build_state_boundaries.py` from the SHRUG (Development Data Lab)
+Census-2011 district polygons (`india_districts_2011.shp`, also used in the
+`dist_complexity_analysis` repo). The external boundary follows India's
+official depiction: J&K covers about 214,000 km², including PoK,
+Gilgit-Baltistan and Aksai Chin. Changes:
+
+- Telangana is rebuilt from its 10 Census-2011 districts. The 2014 transfer of
+  7 Khammam mandals to Andhra Pradesh is ignored.
+- Dadra & Nagar Haveli and Daman & Diu are merged, as in the trade data.
+- **J&K and Ladakh are drawn as one unit**, with their trade values summed:
+  the source has no internal boundary for the post-2019 split across the whole
+  territory, and drawing one by hand is avoided. Both have very small exports.
+- Borders are simplified together (`shapely.coverage_simplify`, 0.01°), so
+  neighbouring states share identical edges. File size is 2.5 MB.
+- The share map hatches states with manufactured exports under US$ 0.5 bn,
+  where a percentage is unreliable. The US$ 4.3 bn with `UNSPECIFIED` state
+  is not mapped.
