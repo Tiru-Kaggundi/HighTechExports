@@ -6,15 +6,14 @@ across **states and districts** in FY 2025-26.
 
 ## Planned approach
 
-1. **Clean the raw DGCI&S data** (HS6-level exports) — *done, see below*.
-2. **Manufacturing exports** — follow the World Bank WITS definition
-   (SITC Rev.3 sections 5–8, excluding division 68 (non-ferrous metals) and
-   group 667 (pearls/precious stones)). This needs an HS6 → SITC concordance.
-3. **High-tech exports** — the World Bank / Eurostat high-technology product
-   list (SITC-based), again mapped onto HS6.
+1. **Clean the raw DGCI&S data** (HS6-level exports) — *done*.
+2. **HS6 → SITC Rev.3** using the WITS concordances, HS edition matched to
+   each year — *done (first pass)*.
+3. **Flag manufacturing exports** (SITC 5–8 excl. 68; variant also excl. 667)
+   and **high-tech exports** (OECD/World Bank SITC Rev.3 list) — *done (first pass)*.
 4. **Indicators** — high-tech share of manufacturing exports, nationally by year
-   (FY07–FY26) and by state/district for FY 2025-26.
-5. **Outputs** — time-series plots, state and district choropleths.
+   (FY07–FY26) and by state/district for FY 2025-26 — *first tables produced*.
+5. **Outputs** — time-series plots, state and district choropleths — *next*.
 
 ## Repository layout
 
@@ -24,12 +23,17 @@ data/
     yearly_hs6/          DGCI&S yearly HS6 export time series (as downloaded)
     district_2025_26/    DGCI&S "state of origin" State x District x HS6 (zip of 29 .xls)
   processed/             cleaned outputs (produced by scripts/)
+  raw/concordances_wits/ WITS HS(2002/07/12/17/22) -> SITC Rev.3 tables
+  reference/
+    oecd_hightech_sitc3.csv          OECD high-tech product list (SITC Rev.3)
+    manual_hs6_sitc3_additions.csv   codes missing from WITS tables
 scripts/
   01_clean_export_data.py
+  02_map_hs6_to_sitc_and_flag.py
 requirements.txt
 ```
 
-Reproduce: `pip install -r requirements.txt && python scripts/01_clean_export_data.py`
+Reproduce: `pip install -r requirements.txt`, then run `python scripts/01_clean_export_data.py` and `python scripts/02_map_hs6_to_sitc_and_flag.py`.
 
 ## Data sources
 
@@ -100,3 +104,103 @@ National totals (US$ bn) from the cleaned yearly series:
 
 Top states, FY 2025-26 (US$ bn): Gujarat 110.6, Maharashtra 69.9,
 Tamil Nadu 59.3, Karnataka 34.4, Uttar Pradesh 22.8, Haryana 20.6.
+
+## Step 2: HS6 → SITC Rev.3, manufacturing and high-tech flags
+
+### Definitions
+
+- **Manufactured exports**
+  - `manuf_wdi`: SITC Rev.3 sections 5, 6, 7, 8 **excluding division 68**
+    (non-ferrous metals). This is the World Bank WDI definition (the denominator
+    of *High-technology exports, % of manufactured exports*).
+  - `manuf_unctad`: same, **also excluding group 667** (pearls, precious and
+    semi-precious stones), as in UNCTAD/WITS "manufactured goods". This matters
+    for India because cut diamonds are large (about US$ 10–30 bn a year).
+- **High-tech exports** (`hightech`, `hightech_group`): the OECD product list
+  (Hatzichronoglou 1997, *Revision of the High-Technology Sector and Product
+  Classification*, OECD STI Working Paper 1997/2, Annex 2 Table 4), which the
+  World Bank uses for its high-tech export indicators. It has nine groups:
+  aerospace, computers/office machines, electronics/telecoms, pharmacy,
+  scientific instruments, electrical machinery, chemistry, non-electrical
+  machinery, armament. The list is in `data/reference/oecd_hightech_sitc3.csv`.
+  Matching uses the longest prefix (the most specific listed code wins). So
+  714 is aerospace but 71489/71499 are non-electrical machinery, 874 is
+  scientific instruments but 87411 is aerospace and 8742 is excluded.
+  - Note: the pharmacy group covers only antibiotics, hormones, vaccines and
+    medicaments containing them (SITC 5413/5415/5416/5421/5422). Most of
+    India's generic formulations (SITC 5429) are **not** high-tech under this list.
+
+### HS edition per year
+
+India reports each year in the HS edition in force. The edition was picked
+from the data: the one covering the most export value in that year.
+
+| FY | Edition | Coverage of export value |
+|---|---|---|
+| 2006-07 – 2007-08 | HS2002 | ~98% |
+| 2008-09 – 2012-13 | HS2007 | 95–98% |
+| 2013-14 – 2016-17 | HS2012 | 99–100% |
+| 2017-18 – 2021-22 | HS2017 | 99.5–100% |
+| 2022-23 – 2025-26 | HS2022 | ~100% |
+
+A code missing from that year's edition is looked up in the nearest other
+edition. What remains unmapped is mostly 999300 (special transactions) and
+chapter 98 (Indian national codes such as project goods). It is at most
+US$ 2.2 bn (FY10) and under US$ 0.05 bn from FY21. It counts in total
+exports only, not in manufacturing; see `unmapped_hs6_codes.csv`.
+
+### Fixes to the WITS tables
+
+- `711890` (other coin) and `271000` (petroleum, an HS1996 code reported in
+  FY07–08) are absent from the WITS tables. They were added manually (SITC 961
+  and 334, neither manufacturing).
+- **Coarse mappings refined.** Newer WITS tables often map an HS6 code only to
+  a 3- or 4-digit SITC code (for example HS2017 `854239` → 776). Where another
+  edition maps the *same* HS6 code to a finer SITC code *inside* that code
+  (776 → 7764), the finer code is used (305 code-edition pairs; the source is
+  in `sitc3_refined_from`). After this, the remaining "partially high-tech"
+  value (`hightech_partial`, not counted as high-tech) is under US$ 1.2 bn in
+  any year.
+- **Open issue: inconsistent mappings across editions.** Some HS6 codes switch
+  high-tech status between editions purely because of the concordance. Examples:
+  `851762` (telecom switching/routing apparatus) is not high-tech under HS2007
+  (→7529) but is under HS2012+ (→76432); `293712` (insulin) is high-tech under
+  HS2002–2012 (→54151) but not under HS2017+ (→5157); `902110` (orthopaedic
+  appliances) loses high-tech status in HS2022 (→694). These codes carry about
+  US$ 1–2 bn of exports a year. For now the edition-specific WITS mapping is
+  kept as is.
+
+### Results (first pass)
+
+High-tech share of India's manufactured exports:
+
+| FY | Total exports (US$ bn) | Manuf. WDI (US$ bn) | High-tech (US$ bn) | HT % manuf (WDI) | HT % manuf (excl. 667) |
+|---|---|---|---|---|---|
+| 2006-07 | 126.4 | 82.1 | 5.0 | 6.1 | 7.1 |
+| 2010-11 | 249.8 | 151.2 | 12.1 | 8.0 | 9.9 |
+| 2015-16 | 262.3 | 182.6 | 15.0 | 8.2 | 9.3 |
+| 2020-21 | 291.8 | 205.8 | 22.4 | 10.9 | 11.9 |
+| 2022-23 | 451.1 | 278.3 | 37.3 | 13.4 | 14.7 |
+| 2023-24 | 437.1 | 281.3 | 44.1 | 15.7 | 16.8 |
+| 2024-25 | 437.7 | 300.0 | 58.9 | 19.6 | 20.7 |
+| 2025-26 | 441.5 | 311.4 | 62.6 | 20.1 | 21.1 |
+
+The rise since FY23 is driven by electronics/telecoms, in particular
+smartphones (HS 851713: US$ 29.4 bn in FY26), plus aircraft turbo-jets
+(HS 841112: US$ 5.1 bn in FY26).
+
+Top states by high-tech exports, FY 2025-26: Tamil Nadu US$ 19.2 bn (35.7% of
+manufactured exports), Karnataka 10.6 (41.6%), Maharashtra 7.3 (12.2%),
+Gujarat 7.1 (12.1%), Delhi 5.5 (55.5%), Uttar Pradesh 5.3 (29.6%).
+
+### Step 2 outputs (`data/processed/`)
+
+| File | Content |
+|---|---|
+| `hs6_sitc3_concordance_flags.csv` | every HS6 code × edition → SITC Rev.3 (WITS and refined), manufacturing and high-tech flags |
+| `india_exports_hs6_fy2007_2026_flagged.csv` | yearly HS6 panel with `hs_edition_used`, SITC and all flags |
+| `india_hightech_share_national.csv` | totals, manufacturing (both definitions), high-tech, partial, unmapped, shares by FY |
+| `india_hightech_by_group_national.csv` | high-tech exports by OECD group × FY (US$ mn) |
+| `district_exports_hs6_fy2025_26_flagged.parquet` | district file with SITC and flags |
+| `hightech_share_by_state_fy2025_26.csv`, `hightech_share_by_district_fy2025_26.csv` | shares by state and district |
+| `unmapped_hs6_codes.csv` | HS6 codes with no SITC mapping, by FY |

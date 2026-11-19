@@ -1,0 +1,89 @@
+group_id,group,sitc3_prefix,rule,title
+1,Aerospace,7921,include,Helicopters
+1,Aerospace,7922,include,Aeroplanes unladen weight < 2000 kg
+1,Aerospace,7923,include,Aeroplanes unladen weight 2000-15000 kg
+1,Aerospace,7924,include,Aeroplanes unladen weight > 15000 kg
+1,Aerospace,7925,include,Spacecraft (incl. satellites and launch vehicles)
+1,Aerospace,79291,include,"Propellers, rotors and parts thereof"
+1,Aerospace,79293,include,Under-carriages and parts thereof
+1,Aerospace,714,include,Aircraft engines (714 excl. 71489 and 71499)
+1,Aerospace,87411,include,Other navigational instruments
+2,Computers-office machines,75113,include,Word-processing machines
+2,Computers-office machines,75131,include,Photo-copying apparatus
+2,Computers-office machines,75132,include,Photo-copying apparatus
+2,Computers-office machines,75134,include,Photo-copying apparatus
+2,Computers-office machines,752,include,Computers (752 excl. 7529)
+2,Computers-office machines,7529,exclude,Excluded from 752
+2,Computers-office machines,75997,include,Parts and accessories of group 752
+3,Electronics-telecommunications,76381,include,Video apparatus
+3,Electronics-telecommunications,76383,include,Other sound reproducing apparatus
+3,Electronics-telecommunications,764,include,Telecommunications equipment (764 excl. 76493 and 76499)
+3,Electronics-telecommunications,76493,exclude,Excluded from 764
+3,Electronics-telecommunications,76499,exclude,Excluded from 764
+3,Electronics-telecommunications,7722,include,Printed circuits
+3,Electronics-telecommunications,77261,include,Electrical boards and consoles < 1000V
+3,Electronics-telecommunications,77318,include,Optical fibre cables
+3,Electronics-telecommunications,77625,include,Microwave tubes
+3,Electronics-telecommunications,77627,include,Other valves and tubes
+3,Electronics-telecommunications,7763,include,Semi-conductor devices
+3,Electronics-telecommunications,7764,include,Electronic integrated circuits and microassemblies
+3,Electronics-telecommunications,7768,include,Piezo-electric crystals and parts of 7763/7764
+3,Electronics-telecommunications,89879,include,Numeric recording media
+4,Pharmacy,5413,include,Antibiotics
+4,Pharmacy,5415,include,Hormones and their derivatives
+4,Pharmacy,5416,include,"Glycosides, glands, antisera, vaccines"
+4,Pharmacy,5421,include,Medicaments containing antibiotics
+4,Pharmacy,5422,include,Medicaments containing hormones
+5,Scientific instruments,774,include,Electro-diagnostic and radiological apparatus
+5,Scientific instruments,8711,include,"Binoculars, astronomical instruments, optical telescopes"
+5,Scientific instruments,8713,include,Microscopes (other than optical)
+5,Scientific instruments,8714,include,Compound optical microscopes
+5,Scientific instruments,8719,include,"Liquid crystal devices, lasers, other optical instruments"
+5,Scientific instruments,87211,include,Dental drill engines
+5,Scientific instruments,874,include,Measuring instruments (874 excl. 87411 and 8742)
+5,Scientific instruments,8742,exclude,Excluded from 874
+5,Scientific instruments,88111,include,Photographic cameras
+5,Scientific instruments,88121,include,Cinematographic cameras
+5,Scientific instruments,88411,include,Contact lenses
+5,Scientific instruments,88419,include,Optical fibres other than 7731
+5,Scientific instruments,89961,include,Hearing aids
+5,Scientific instruments,89963,include,Orthopaedic appliances
+5,Scientific instruments,89966,include,Ocular prosthesis
+5,Scientific instruments,89967,include,Pacemakers
+6,Electrical machinery,77862,include,Tantalum fixed capacitors
+6,Electrical machinery,77863,include,Aluminium electrolytic fixed capacitors
+6,Electrical machinery,77864,include,"Ceramic dielectric fixed capacitors, single layer"
+6,Electrical machinery,77865,include,"Ceramic dielectric fixed capacitors, multilayer"
+6,Electrical machinery,7787,include,Electrical machines having individual functions
+6,Electrical machinery,77884,include,Electric sound or visual signalling apparatus
+7,Chemistry,52222,include,"Selenium, tellurium, phosphorus, arsenic, boron"
+7,Chemistry,52223,include,Silicon
+7,Chemistry,52229,include,"Calcium, strontium, barium"
+7,Chemistry,52269,include,Other inorganic bases
+7,Chemistry,525,include,Radio-active materials
+7,Chemistry,531,include,Organic colouring matter and colour lakes
+7,Chemistry,57433,include,Polyethylene terephthalate
+7,Chemistry,591,include,"Insecticides, fungicides, herbicides, disinfectants"
+8,Non-electrical machinery,71489,include,Other gas turbines
+8,Non-electrical machinery,71499,include,Parts of gas turbines
+8,Non-electrical machinery,71871,include,Nuclear reactors
+8,Non-electrical machinery,71877,include,Fuel elements non-irradiated
+8,Non-electrical machinery,71878,include,Parts of nuclear reactors
+8,Non-electrical machinery,72847,include,Machinery for isotopic separation
+8,Non-electrical machinery,7311,include,"Machine-tools working by laser, ultrasonic, EDM, etc."
+8,Non-electrical machinery,73131,include,"Horizontal lathes, NC"
+8,Non-electrical machinery,73135,include,"Other lathes, NC"
+8,Non-electrical machinery,73142,include,"Other drilling machines, NC"
+8,Non-electrical machinery,73144,include,"Other boring-milling machines, NC"
+8,Non-electrical machinery,73151,include,"Milling machines, knee-type, NC"
+8,Non-electrical machinery,73153,include,"Other milling machines, NC"
+8,Non-electrical machinery,73161,include,"Flat-surface grinding machines, NC"
+8,Non-electrical machinery,73163,include,"Other grinding machines, NC"
+8,Non-electrical machinery,73165,include,"Sharpening machines, NC"
+8,Non-electrical machinery,73312,include,"Bending/folding/straightening machines, NC"
+8,Non-electrical machinery,73314,include,"Shearing machines, NC"
+8,Non-electrical machinery,73316,include,"Punching machines, NC"
+8,Non-electrical machinery,7359,include,Parts and accessories of 731 and 733
+8,Non-electrical machinery,73733,include,"Resistance welding machines, automatic"
+8,Non-electrical machinery,73735,include,"Arc/plasma welding machines, automatic"
+9,Armament,891,include,Arms and ammunition
