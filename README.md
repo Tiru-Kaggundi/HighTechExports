@@ -237,6 +237,11 @@ Full table: `data/processed/state_summary_fy2025_26.csv`.
 
 ## Step 3: charts (`figures/`)
 
+Charts are saved at 200 dpi (about 1,640 px wide). High-resolution 300 dpi
+copies (about 2,460 px wide) for publishing are in `figures/hires/`; rebuild
+them with `FIG_DPI=300 python scripts/03_plots_national_and_state.py` and
+`FIG_DPI=300 python scripts/05_state_maps.py`.
+
 ![High-tech share of manufactured exports](figures/01_hightech_share_national.png)
 
 ![High-tech exports by product group](figures/02_hightech_by_group_national.png)

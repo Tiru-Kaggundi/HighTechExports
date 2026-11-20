@@ -13,6 +13,8 @@ from __future__ import annotations
 from pathlib import Path
 
 import geopandas as gpd
+import os
+
 import matplotlib
 
 matplotlib.use("Agg")
@@ -22,7 +24,10 @@ from matplotlib.patches import Patch
 
 ROOT = Path(__file__).resolve().parents[1]
 PROC = ROOT / "data" / "processed"
-FIG = ROOT / "figures"
+# FIG_DPI=300 writes high-resolution copies to figures/hires/ (e.g. for Substack).
+DPI = int(os.environ.get("FIG_DPI", "200"))
+FIG = ROOT / "figures" / ("hires" if DPI > 200 else "")
+FIG.mkdir(parents=True, exist_ok=True)
 GEO = ROOT / "data" / "reference" / "geo" / "india_states_official.geojson"
 
 SURFACE, INK, INK2, NODATA, EDGE = "#fcfcfb", "#0b0b0b", "#52514e", "#e4e3df", "#fcfcfb"
@@ -77,7 +82,7 @@ def draw(g, color_col, legend_items, title, fname, labels):
     ax.legend(handles=legend_items, loc="lower right", frameon=False, fontsize=8, title_fontsize=8.5,
               title=legend_items[0].get_label() and None)
     fig.text(0.02, 0.02, SOURCE, fontsize=6.8, color=INK2, ha="left", va="bottom")
-    fig.savefig(FIG / fname, dpi=200, bbox_inches="tight")
+    fig.savefig(FIG / fname, dpi=DPI, bbox_inches="tight")
     plt.close(fig)
 
 

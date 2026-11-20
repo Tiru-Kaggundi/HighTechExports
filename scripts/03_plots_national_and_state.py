@@ -10,6 +10,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import os
+
 import matplotlib
 
 matplotlib.use("Agg")
@@ -18,7 +20,10 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
 PROC = ROOT / "data" / "processed"
-FIG = ROOT / "figures"
+# FIG_DPI=300 writes high-resolution copies to figures/hires/ (e.g. for Substack).
+DPI = int(os.environ.get("FIG_DPI", "200"))
+FIG = ROOT / "figures" / ("hires" if DPI > 200 else "")
+FIG.mkdir(parents=True, exist_ok=True)
 FIG.mkdir(exist_ok=True)
 
 # Validated categorical palette (light mode), fixed order.
@@ -42,7 +47,7 @@ def fy_label(fy: str) -> str:  # "2025-26" -> "FY26"
 
 def finish(fig, ax, name: str, note: str = SOURCE) -> None:
     fig.text(0.01, 0.01, note, fontsize=7.5, color=INK2, ha="left", va="bottom")
-    fig.savefig(FIG / name, dpi=200, bbox_inches="tight")
+    fig.savefig(FIG / name, dpi=DPI, bbox_inches="tight")
     plt.close(fig)
 
 
