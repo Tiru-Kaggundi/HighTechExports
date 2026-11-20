@@ -1,5 +1,8 @@
 # HighTechExports
 
+**Write-up:** [How Much of What India Makes Is High-Tech?](https://indianwesterlies.substack.com/p/how-much-of-what-india-makes-is-high) (Indian Westerlies, Nov 2026).
+Previous post using related data: [Why High-Tech Manufacturing Matters for Growth](https://indianwesterlies.substack.com/p/why-high-tech-manufacturing-matters).
+
 High-tech exports from India: how high-tech goods have evolved as a share of
 **manufacturing exports** from FY 2006-07 to FY 2025-26, and how they are spread
 across **states and districts** in FY 2025-26.
