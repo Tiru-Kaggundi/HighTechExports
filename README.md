@@ -35,6 +35,7 @@ scripts/
   03_plots_national_and_state.py
   04_build_state_boundaries.py
   05_state_maps.py
+  06_plot_peer_comparison.py
 figures/                 charts and maps (PNG)
 requirements.txt
 ```
@@ -287,3 +288,21 @@ Gilgit-Baltistan and Aksai Chin. Changes:
 - The share map hatches states with manufactured exports under US$ 0.5 bn,
   where a percentage is unreliable. The US$ 4.3 bn with `UNSPECIFIED` state
   is not mapped.
+
+### Peer comparison (World Bank, calendar years)
+
+![High-tech share, selected economies](figures/09_peer_hightech_share.png)
+
+`scripts/06_plot_peer_comparison.py` plots the World Bank series
+*High-technology exports (% of manufactured exports)* (TX.VAL.TECH.MF.ZS,
+downloaded 2026-11-20 to `data/raw/worldbank_TX.VAL.TECH.MF.ZS.json`) for
+China, Vietnam, Malaysia, the World and OECD members. The data is in
+`data/processed/worldbank_hightech_share_peers.csv`. India is left off the
+chart because the World Bank series is by calendar year. It closely tracks
+this project's financial-year series anyway: 7.4% in 2017 against 7.9% in
+FY 2017-18, and 18.6% in 2024 against 19.7% in FY 2024-25. That is an
+independent check on the HS→SITC mapping.
+
+Latest values: Malaysia 58.6% (2024), Vietnam 44.3% (2023; it was 8.8% in
+2008), China 26.3% (2024; about 30–32% in 2007–2021), World 24.7% (2024),
+OECD members 22.3% (2024).
